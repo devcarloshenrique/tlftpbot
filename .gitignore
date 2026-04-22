@@ -1,4 +1,8 @@
 .env
 __pycache__
 *.session*
+sessions/
 *_test.py
+api/node_modules/
+ftp/pathio.py.enc
+ftp/server.py.enc

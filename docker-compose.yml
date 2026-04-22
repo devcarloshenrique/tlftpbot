@@ -1,32 +1,31 @@
 services:
   app:
-    build: .
-    container_name: nebula_ftp
+    build: .                           # Build local do Dockerfile
+    container_name: nebulaftp
     restart: unless-stopped
-    # MÁGICA AQUI: Usamos a rede do host. O container age como um processo normal na VPS.
-    # Sem problemas de NAT, sem problemas de portas passivas.
-    network_mode: host
-    volumes:
-      - ./staging:/app/staging
-      - ./FTP_Bot.session:/app/FTP_Bot.session
-      - ./nebula.log:/app/nebula.log
-      - ./.env:/app/.env
+    ports:
+      - "2121:2121"                    # Porta FTP
+      - "60000-60100:60000-60100"      # Portas Passivas
     environment:
-      # Como estamos no modo host, o container vê o mongo na porta local
-      - MONGODB=mongodb://127.0.0.1:27017
+      - MONGODB=mongodb://mongo:27017
+      - HOST=0.0.0.0
+    env_file:
+      - .env
+    volumes:
+      - ./staging:/app/staging         # Cache de uploads
+      - ./logs:/app/logs               # Logs persistentes
+      - ./sessions:/app/sessions       # Sessao Pyrogram persistente
     depends_on:
       - mongo
 
   mongo:
-    image: mongo:4.4
+    image: mongo:6.0
     container_name: nebula_mongo
     restart: unless-stopped
-    ports:
-      # Expomos o mongo para o 'localhost' da VPS para o app conseguir conectar
-      - "127.0.0.1:27017:27017"
     volumes:
-      - mongo_data:/data/db
+      - mongo_data:/data/db            # Persistência do banco
+    environment:
+      - MONGO_INITDB_DATABASE=ftp
 
 volumes:
-  mongo_data:
-
+  mongo_data:                          # Volume nomeado
