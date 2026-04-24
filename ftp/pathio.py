@@ -146,6 +146,12 @@ class MongoDBPathIO(AbstractPathIO):
     _cache_lock = Lock()
     Stats = namedtuple("Stats", ("st_size", "st_ctime", "st_mtime", "st_nlink", "st_mode"))
 
+    @classmethod
+    async def invalidate_cache(cls, parent, name):
+        key = f"{parent}::{name}"
+        async with cls._cache_lock:
+            cls._memory_cache.pop(key, None)
+
     def __init__(self, *args, state=None, cwd=None, **kwargs):
         super().__init__(*args, **kwargs); self.cwd = PurePosixPath("/")
 
@@ -177,7 +183,8 @@ class MongoDBPathIO(AbstractPathIO):
 
         node = await self.db.files.find_one({"name": name, "parent": parent})
         if node:
-            async with self._cache_lock: self._memory_cache[cache_key] = node
+            if node.get("status") != "staging":
+                async with self._cache_lock: self._memory_cache[cache_key] = node
             return Node(**node)
             
         # Fallback
