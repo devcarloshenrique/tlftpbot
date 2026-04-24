@@ -470,6 +470,9 @@ async def upload_worker(bot, target_chat_id, mongo, worker_id):
                         "$unset": {"uploadId": 1, "local_path": 1},
                     },
                 )
+                # Invalida cache em memória para que o próximo download
+                # busque os dados atualizados (com parts) do MongoDB
+                await MongoDBPathIO.invalidate_cache(parent, filename)
                 logger.info(f"✅ [W{worker_id}] Concluido: {filename}")
                 Metrics.log_success(real_size)
                 # Agora sim o GC ou nos mesmos podemos remover
