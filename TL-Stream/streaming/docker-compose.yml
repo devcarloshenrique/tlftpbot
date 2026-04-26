@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  # ──────────────────────────────────────────────
+  # API de Streaming (FastAPI + Pyrogram)
+  # ──────────────────────────────────────────────
+  api-stream:
+    build: .
+    container_name: tl-stream-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./sessions:/app/sessions # Sessões Pyrogram persistidas
+    restart: unless-stopped
+    networks:
+      - tl-network
+      - nebulaftp_default
+
+  # ──────────────────────────────────────────────
+  # Rclone — Monta HTTP remoto como FUSE local
+  # ──────────────────────────────────────────────
+  rclone-mount:
+    image: rclone/rclone:latest
+    container_name: tl-rclone-mount
+    depends_on:
+      - api-stream
+    volumes:
+      - ./rclone.conf:/config/rclone/rclone.conf:ro
+      - /mnt/media/telegram:/data:shared # Ponto de montagem no host
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    security_opt:
+      - apparmor:unconfined
+    command: >
+      mount tl-http: /data --allow-other --allow-non-empty --vfs-cache-mode minimal --dir-cache-time 30s --poll-interval 60s --vfs-read-chunk-size 8M --no-modtime --read-only
+    restart: unless-stopped
+    networks:
+      - tl-network
+
+networks:
+  tl-network:
+    driver: bridge
+  nebulaftp_default:
+    external: true
