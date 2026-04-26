@@ -19,6 +19,7 @@ from pyrogram import Client
 from pyrogram.errors import FloodWait
 
 import asyncio
+import time as _time
 
 logger = logging.getLogger("TLStream")
 
@@ -170,6 +171,29 @@ async def fetch_movie_by_name(filename: str) -> Optional[dict]:
 
 MAX_STREAM_RETRIES = 5
 
+# Cache de objetos Message do Pyrogram (evita get_messages repetidos)
+# Formato: {message_id: (timestamp, Message)}
+_message_cache: dict = {}
+_CACHE_TTL = 300  # 5 minutos
+
+
+async def _get_cached_message(client: Client, message_id: int):
+    """Retorna o Message do cache ou busca do Telegram e cacheia."""
+    now = _time.time()
+    if message_id in _message_cache:
+        ts, msg = _message_cache[message_id]
+        if now - ts < _CACHE_TTL:
+            logger.debug("📦 Cache hit msg_id=%d", message_id)
+            return msg
+
+    logger.debug("🔄 Cache miss msg_id=%d, buscando do Telegram", message_id)
+    msg = await client.get_messages(
+        chat_id=CHAT_ID,
+        message_ids=message_id,
+    )
+    _message_cache[message_id] = (now, msg)
+    return msg
+
 
 async def stream_chunk(
     client: Client,
@@ -200,11 +224,8 @@ async def stream_chunk(
 
     for attempt in range(1, MAX_STREAM_RETRIES + 1):
         try:
-            # Passo 1: busca o objeto da mensagem pelo chat_id + message_id
-            message = await client.get_messages(
-                chat_id=CHAT_ID,
-                message_ids=message_id,
-            )
+            # Busca mensagem do cache (ou do Telegram se expirou)
+            message = await _get_cached_message(client, message_id)
 
             # Passo 2: usa o objeto da mensagem no stream_media
             async for chunk in client.stream_media(message=message):

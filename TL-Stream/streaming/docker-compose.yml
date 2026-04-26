@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
     networks:
       - tl-network
-      - nebulaftp_default
+      - tlftpbot_default
 
   # ──────────────────────────────────────────────
   # Rclone — Monta HTTP remoto como FUSE local
@@ -36,7 +36,7 @@ services:
     security_opt:
       - apparmor:unconfined
     command: >
-      mount tl-http: /data --allow-other --allow-non-empty --vfs-cache-mode minimal --dir-cache-time 30s --poll-interval 60s --vfs-read-chunk-size 8M --no-modtime --read-only
+      mount tl-http: /data --allow-other --allow-non-empty --vfs-cache-mode full --vfs-cache-max-age 24h --vfs-cache-max-size 5G --vfs-read-chunk-size 16M --vfs-read-chunk-size-limit 1G --buffer-size 64M --dir-cache-time 1h --poll-interval 1m --no-modtime --read-only
     restart: unless-stopped
     networks:
       - tl-network
@@ -44,5 +44,5 @@ services:
 networks:
   tl-network:
     driver: bridge
-  nebulaftp_default:
+  tlftpbot_default:
     external: true

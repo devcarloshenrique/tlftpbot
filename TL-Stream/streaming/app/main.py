@@ -174,6 +174,7 @@ async def stream_file(filename: str, request: Request):
                 "Accept-Ranges": "bytes",
                 "Content-Length": str(total_size),
                 "Content-Type": content_type,
+                "Cache-Control": "public, max-age=3600",
             }
         )
 
@@ -189,6 +190,7 @@ async def stream_file(filename: str, request: Request):
             headers={
                 "Content-Length": str(total_size),
                 "Accept-Ranges": "bytes",
+                "Cache-Control": "public, max-age=3600",
             },
         )
 
@@ -226,5 +228,6 @@ async def stream_file(filename: str, request: Request):
             "Content-Range": f"bytes {byte_start}-{byte_end}/{total_size}",
             "Content-Length": str(content_length),
             "Accept-Ranges": "bytes",
+            "Cache-Control": "public, max-age=3600",
         },
     )
