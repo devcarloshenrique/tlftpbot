@@ -56,17 +56,19 @@ async def init_bot() -> Client:
     await bot.start()
     logger.info("✅ Pyrogram Client conectado.")
 
-    # ── Pre-cache do Peer para evitar "Peer id invalid" ──
+    # ── Sincronização ativa do Peer (Ping-Pong) ──
     if CHAT_ID is not None:
         try:
-            chat_info = await bot.get_chat(CHAT_ID)
-            logger.info(
-                "✅ Peer cacheado com sucesso: %s (%d)",
-                chat_info.title,
-                chat_info.id,
-            )
+            logger.info("⏳ Forçando sincronização ativa do Peer...")
+            ping_msg = await bot.send_message(CHAT_ID, "🔄 Sincronizando cache do TL-Stream...")
+            await ping_msg.delete()
+            logger.info("✅ Peer cacheado com sucesso via Ping Ativo!")
         except Exception as e:
-            logger.warning("⚠️ Não foi possível fazer pre-cache do chat: %s", e)
+            logger.warning("⚠️ Falha no Ping Ativo do canal. Tentando fallback. Erro: %s", e)
+            try:
+                await bot.send_message("me", "Ping de inicialização do TL-Stream.")
+            except Exception as fallback_err:
+                logger.error("⚠️ Fallback de inicialização também falhou: %s", fallback_err)
 
     return bot
 
@@ -109,11 +111,18 @@ async def fetch_movies() -> list[dict]:
     if db is None:
         raise RuntimeError("DB não inicializado. Chame init_db() primeiro.")
 
-    cursor = db.files.find({
+    query = {
         "type": "file",
         "status": "completed",
         "parts": {"$exists": True, "$ne": []},
-    })
+    }
+
+    allowed_folder = environ.get("ALLOWED_FOLDER", "")
+    if allowed_folder:
+        query["parent"] = {"$regex": f"{allowed_folder}", "$options": "i"}
+        logger.debug("🔍 Filtro ALLOWED_FOLDER ativo: %s", allowed_folder)
+
+    cursor = db.files.find(query)
 
     movies = []
     async for doc in cursor:
