@@ -6,6 +6,8 @@ from pathlib import PurePosixPath, Path
 from socket import AF_INET, AF_INET6
 from stat import filemode
 from time import strftime, gmtime, time, localtime
+import os
+import socket
 import unicodedata # <--- Importante para normalização de nomes
 
 from .errors import PathIOError, NoAvailablePort
@@ -17,6 +19,37 @@ __all__ = (
     "Connection", "AvailableConnections", "ConnectionConditions",
     "PathConditions", "PathPermissions", "worker", "Server",
 )
+
+def get_local_ip():
+    """Detecta automaticamente o IP local da maquina na rede (ex: 192.168.x.x).
+    Se nao encontrar, retorna '127.0.0.1'."""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(0.1)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        pass
+    try:
+        hostname = socket.gethostname()
+        ip = socket.gethostbyname(hostname)
+        if ip and not ip.startswith("127."):
+            return ip
+    except Exception:
+        pass
+    return "127.0.0.1"
+
+def _get_passive_port_range():
+    """Le a variavel PASSIVE_PORTS do ambiente (ex: 60000-60100).
+    Se nao definida, usa o range padrao 60000-60100."""
+    pp_str = os.environ.get("PASSIVE_PORTS", "60000-60100")
+    try:
+        start_p, end_p = map(int, pp_str.split("-"))
+        return range(start_p, end_p + 1)
+    except Exception:
+        return range(60000, 60101)
 
 class Permission:
     def __init__(self, path="/", *, readable=False, writable=False):
@@ -447,7 +480,8 @@ class Server:
             else: conn.data_connection = StreamIO(r, w)
         if not conn.future.passive_server.done():
             bound = False
-            for p in range(60000, 60101):
+            passive_range = _get_passive_port_range()
+            for p in passive_range:
                 try: 
                     conn.passive_server = await start_server(h, conn.server_host, p, ssl=None, **self._start_server_extra_arguments)
                     bound = True
@@ -462,10 +496,12 @@ class Server:
             if s.family == AF_INET: host, port = s.getsockname(); break
         else: host, port = "127.0.0.1", 0
         
-        # force host to be what the client knows (or at least valid IPv4 string)
-        import os
-        pub_ip = os.environ.get("PASV_IP", host)
-        if pub_ip == "0.0.0.0": pub_ip = "127.0.0.1" # local test fallback
+        # IP publico: usa PASV_IP do .env, senao auto-detecta, com fallback para 127.0.0.1
+        pub_ip = os.environ.get("PASV_IP", "").strip()
+        if not pub_ip or pub_ip == "0.0.0.0":
+            pub_ip = get_local_ip()
+        if pub_ip == "0.0.0.0":
+            pub_ip = "127.0.0.1"
         
         if epsv: msg = f"entering epsv (|||{port}|)"
         else:
