@@ -158,25 +158,10 @@ O TL-Stream utiliza diversos protocolos em camadas diferentes para cumprir sua f
 ## Deployment com Docker-Compose (exemplo)
 
 ```yaml
-version: "3.8"
-services:
-  tl-stream:
-    build: ./TL-Stream/streaming
-    env_file:
-      - ./TL-Stream/streaming/.env
-    ports:
-      - "8000:8000"
-    depends_on:
-      - mongo
-    restart: unless-stopped
-
-  mongo:
-    image: mongo:6
-    restart: unless-stopped
-    volumes:
-      - mongo-data:/data/db
-volumes:
-  mongo-data:
+# Consulte o docker-compose.yml em TL-Stream/streaming/
+# A conexão MongoDB usa a variável MONGODB_CLOUD_URI do .env principal:
+#   - Vazia → mongodb://mongo:27017 (local)
+#   - Preenchida → URI do MongoDB Atlas
 ```
 
 O arquivo `.env` deve conter, no mínimo:
@@ -186,7 +171,9 @@ API_ID=123456
 API_HASH=seu_api_hash
 BOT_TOKEN=123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11
 CHAT_ID=-1001234567890   # ID do canal/chat do Telegram (negativo para supergroups/canais)
-MONGODB=mongodb://mongo:27017
+
+# A conexão MongoDB é definida no docker-compose.yml via MONGODB_CLOUD_URI
+# Não é necessário definir MONGODB aqui
 # Opcional: ALLOWED_FOLDER=/Media/Videos
 ```
 

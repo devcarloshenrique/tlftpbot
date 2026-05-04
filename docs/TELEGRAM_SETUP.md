@@ -1,6 +1,6 @@
 # 📱 Configuração do Telegram
 
-Este guia ensina como criar e configurar tudo que você precisa no Telegram para usar o Nebula FTP.
+Este guia ensina como criar e configurar tudo que você precisa no Telegram para usar o TLFTPBot.
 
 ---
 
@@ -35,8 +35,8 @@ Você receberá um código no Telegram. Digite-o no site.
 
 1. Clique em **"API development tools"**
 2. Preencha o formulário:
-   - **App title:** Nebula FTP
-   - **Short name:** nebulaftp
+   - **App title:** TLFTPBot
+   - **Short name:** tlftpbot
    - **Platform:** Other
 3. Clique em **"Create application"**
 
@@ -68,13 +68,13 @@ Envie o comando:
 
 **BotFather:** Alright, a new bot. How are we going to call it?
 
-Você: `Nebula FTP Bot`
+Você: `TLFTPBot`
 
 ### 2.4 Escolha um Username
 
 **BotFather:** Good. Now let's choose a username for your bot.
 
-Você: `nebula_ftp_bot` (deve terminar com `bot`)
+Você: `tlftpbot_bot` (deve terminar com `bot`)
 
 ### 2.5 Copie o Token
 
@@ -90,8 +90,8 @@ Use this token to access the HTTP API:
 ### 2.6 (Opcional) Criar Mais Bots
 
 Para melhor performance, crie 2-4 bots repetindo os passos acima:
-- `nebula_ftp_bot_1`
-- `nebula_ftp_bot_2`
+- `tlftpbot_bot_1`
+- `tlftpbot_bot_2`
 - etc.
 
 ---
@@ -102,14 +102,14 @@ Para melhor performance, crie 2-4 bots repetindo os passos acima:
 
 No Telegram:
 1. Menu → **New Channel**
-2. Nome: `Nebula FTP Storage`
+2. Nome: `TLFTPBot Storage`
 3. Tipo: **Private** (IMPORTANTE!)
 
 ### 3.2 Adicionar os Bots como Admin
 
 1. Abra o canal
 2. Menu → **Administrators** → **Add Admin**
-3. Busque pelo username do bot (ex: `@nebula_ftp_bot`)
+3. Busque pelo username do bot (ex: `@tlftpbot_bot`)
 4. Marque **todas as permissões**
 5. Salve
 

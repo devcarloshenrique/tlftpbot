@@ -6,22 +6,21 @@ services:
     ports:
       - "2121:2121"                    # Porta FTP
       - "60000-60100:60000-60100"      # Portas Passivas
-    environment:
-      - MONGODB=mongodb://mongo:27017
-      - HOST=0.0.0.0
     env_file:
       - .env
+    environment:
+      - MONGODB=${MONGODB_CLOUD_URI:-mongodb://mongo:27017}
+      - HOST=0.0.0.0
     volumes:
       - ./staging:/app/staging         # Cache de uploads
       - ./logs:/app/logs               # Logs persistentes
       - ./sessions:/app/sessions       # Sessao Pyrogram persistente
-    depends_on:
-      - mongo
-
   mongo:
     image: mongo:6.0
     container_name: nebula_mongo
     restart: unless-stopped
+    profiles:
+      - local
     volumes:
       - mongo_data:/data/db            # Persistência do banco
     environment:

@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # ──────────────────────────────────────────────
   # API de Streaming (FastAPI + Pyrogram)
@@ -11,6 +9,8 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      - MONGODB=${MONGODB_CLOUD_URI:-mongodb://mongo:27017}
     volumes:
       - ./sessions:/app/sessions # Sessões Pyrogram persistidas
     restart: unless-stopped
